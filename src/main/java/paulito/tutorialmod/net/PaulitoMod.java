@@ -305,8 +305,9 @@ public class PaulitoMod implements ModInitializer {
         if (config.grandStreakThreshold > currentStreak && config.grandStreakThreshold - currentStreak < grandThresholdWindow) {
             target = config.grandStreakThreshold;
         }
-
-        return currentStreak + "/" + target + " mobs";
+        
+        // Return de la racha actual y el objetivo de la racha + cuanta XP se da por alcanzar la racha.
+        return currentStreak + "/" + target + " mobs (+" + (target == config.grandStreakThreshold ? config.grandRewardXp : config.normalRewardXp) + " XP)";
     }
 
     // Devuelve el nombre del mob.
