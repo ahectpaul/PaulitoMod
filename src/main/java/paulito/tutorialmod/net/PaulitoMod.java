@@ -20,6 +20,8 @@ import net.minecraft.world.level.Level;
 
 public class PaulitoMod implements ModInitializer {
 
+    public static PaulitoModConfig config;
+
     // Cache de la última dimensión vista por cada jugador.
     private static final Map<UUID, String> lastDimensions = new HashMap<>();
 
@@ -32,6 +34,7 @@ public class PaulitoMod implements ModInitializer {
     // Inicializa todos los eventos del mod.
     @Override
     public void onInitialize() {
+        config = PaulitoModConfig.load();
         registerKillFeedEvent();
         registerDamageTrackingEvent();
         registerJoinEvent();
@@ -43,7 +46,7 @@ public class PaulitoMod implements ModInitializer {
     private void registerKillFeedEvent() {
         // Kill feed: muestra quién mató a qué mob, con arma y dimensión.
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (!(damageSource.getEntity() instanceof ServerPlayer)) {
+            if (!config.enabled || !config.killFeedEnabled || !(damageSource.getEntity() instanceof ServerPlayer)) {
                 return;
             }
 
@@ -99,10 +102,14 @@ public class PaulitoMod implements ModInitializer {
     // Actualiza la caché cuando el jugador recibe daño.
     private void registerDamageTrackingEvent() {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, damageSource, amount) -> {
-            if (entity instanceof ServerPlayer player) {
+            if (config.enabled && config.damageTrackingEnabled && entity instanceof ServerPlayer player) {
                 player.server.execute(() -> {
-                    updateDimensionCache(player);
-                    updateHealthCache(player);
+                    if (config.dimensionTrackingEnabled) {
+                        updateDimensionCache(player);
+                    }
+                    if (config.healthTrackingEnabled) {
+                        updateHealthCache(player);
+                    }
                 });
             }
             return true;
@@ -114,9 +121,15 @@ public class PaulitoMod implements ModInitializer {
         // Cuando entra al servidor, cacheamos su dimensión y salud iniciales.
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             server.execute(() -> {
-                resetKillStreak(handler.getPlayer());
-                updateDimensionCache(handler.getPlayer());
-                updateHealthCache(handler.getPlayer());
+                if (config.enabled && config.joinStateRefreshEnabled) {
+                    resetKillStreak(handler.getPlayer());
+                    if (config.dimensionTrackingEnabled) {
+                        updateDimensionCache(handler.getPlayer());
+                    }
+                    if (config.healthTrackingEnabled) {
+                        updateHealthCache(handler.getPlayer());
+                    }
+                }
             });
         });
     }
@@ -126,9 +139,15 @@ public class PaulitoMod implements ModInitializer {
         // Cuando respawnea, volvemos a registrar su dimensión actual.
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
             newPlayer.server.execute(() -> {
-                resetKillStreak(newPlayer);
-                updateDimensionCache(newPlayer);
-                updateHealthCache(newPlayer);
+                if (config.enabled && config.respawnStateRefreshEnabled) {
+                    resetKillStreak(newPlayer);
+                    if (config.dimensionTrackingEnabled) {
+                        updateDimensionCache(newPlayer);
+                    }
+                    if (config.healthTrackingEnabled) {
+                        updateHealthCache(newPlayer);
+                    }
+                }
             });
         });
     }
@@ -138,11 +157,18 @@ public class PaulitoMod implements ModInitializer {
         // Cuando cambia de dimensión o se teletransporta, refrescamos la caché.
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
             player.server.execute(() -> {
-                if (origin.dimension() != destination.dimension()) {
+                if (!config.enabled) {
+                    return;
+                }
+                if (config.resetOnDimensionChange && origin.dimension() != destination.dimension()) {
                     resetKillStreak(player);
                 }
-                updateDimensionCache(player);
-                updateHealthCache(player);
+                if (config.dimensionTrackingEnabled) {
+                    updateDimensionCache(player);
+                }
+                if (config.healthTrackingEnabled) {
+                    updateHealthCache(player);
+                }
             });
         });
     }
@@ -154,19 +180,23 @@ public class PaulitoMod implements ModInitializer {
 
     // Reparte recompensas según la racha de hostiles eliminados.
     private static void handleKillStreakReward(ServerPlayer player, int streak) {
-        if (streak % 500 == 0) {
-            player.giveExperiencePoints(200);
+        if (!config.enabled || !config.streaksEnabled) {
+            return;
+        }
+
+        if (config.grandRewardEnabled && streak % config.grandStreakThreshold == 0) {
+            player.giveExperiencePoints(config.grandRewardXp);
             player.displayClientMessage(
-                    Component.literal("¡Racha épica! Has matado " + streak + " hostiles. +200 XP")
+                    Component.literal("¡Racha épica! Has matado " + streak + " hostiles. +" + config.grandRewardXp + " XP")
                             .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
                     false);
             return;
         }
 
-        if (streak % 50 == 0) {
-            player.giveExperiencePoints(25);
+        if (config.normalRewardEnabled && streak % config.normalStreakThreshold == 0) {
+            player.giveExperiencePoints(config.normalRewardXp);
             player.displayClientMessage(
-                    Component.literal("¡Racha activa! " + streak + " hostiles eliminados. +25 XP")
+                    Component.literal("¡Racha activa! " + streak + " hostiles eliminados. +" + config.normalRewardXp + " XP")
                             .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD),
                     false);
         }
