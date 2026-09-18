@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "paulitomod",
+	"version": "${version}",
+	"name": "PaulitoKillFeeder",
+	"description": "Kill feed para servidores de Minecraft.",
+	"authors": [
+		"Hector Paul Ahumada"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/paulitomod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"paulito.tutorialmod.net.PaulitoMod"
+		],
+		"client": [
+			"paulito.tutorialmod.net.client.PaulitoModClient"
+		]
+	},
+	"mixins": [
+		"paulitomod.mixins.json",
+		{
+			"config": "paulitomod.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}
