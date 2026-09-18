@@ -34,6 +34,7 @@ public class PaulitoModConfig {
     public boolean damageTrackingEnabled = true;
     public boolean dimensionTrackingEnabled = true;
     public boolean healthTrackingEnabled = true;
+    public boolean tabListEnabled = true;
     public boolean joinStateRefreshEnabled = true;
     public boolean respawnStateRefreshEnabled = true;
 
@@ -90,6 +91,7 @@ public class PaulitoModConfig {
                 + "    \"damageTrackingEnabled\": " + config.damageTrackingEnabled + ",\n"
                 + "    \"dimensionTrackingEnabled\": " + config.dimensionTrackingEnabled + ",\n"
                 + "    \"healthTrackingEnabled\": " + config.healthTrackingEnabled + ",\n"
+                + "    \"tabListEnabled\": " + config.tabListEnabled + ",\n"
                 + "    \"joinStateRefreshEnabled\": " + config.joinStateRefreshEnabled + ",\n"
                 + "    \"respawnStateRefreshEnabled\": " + config.respawnStateRefreshEnabled + "\n"
                 + "  }\n"
@@ -131,6 +133,7 @@ public class PaulitoModConfig {
             case "damageTrackingEnabled" -> config.damageTrackingEnabled = Boolean.parseBoolean(value);
             case "dimensionTrackingEnabled" -> config.dimensionTrackingEnabled = Boolean.parseBoolean(value);
             case "healthTrackingEnabled" -> config.healthTrackingEnabled = Boolean.parseBoolean(value);
+            case "tabListEnabled" -> config.tabListEnabled = Boolean.parseBoolean(value);
             case "joinStateRefreshEnabled" -> config.joinStateRefreshEnabled = Boolean.parseBoolean(value);
             case "respawnStateRefreshEnabled" -> config.respawnStateRefreshEnabled = Boolean.parseBoolean(value);
             default -> {
